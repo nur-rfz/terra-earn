@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { MapPin, DollarSign, Clock, TrendingUp, User, Map as MapIcon, List, Loader2, RefreshCw } from "lucide-react";
+import { MapPin, DollarSign, Clock, TrendingUp, User, Map as MapIcon, List, Loader2, RefreshCw, Navigation, NavigationOff } from "lucide-react";
 import MapView from "@/components/MapView";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -83,6 +83,7 @@ const Home = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationStatus, setLocationStatus] = useState<'requesting' | 'granted' | 'denied' | 'unavailable'>('requesting');
   const previousJobIds = useRef<Set<string>>(new Set());
 
   // Calculate distance between two coordinates using Haversine formula
@@ -98,30 +99,61 @@ const Home = () => {
     return R * c;
   };
 
-  // Get user's location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-          toast({
-            title: "Location enabled",
-            description: "Showing jobs sorted by distance from your location",
-          });
-        },
-        (error) => {
-          console.log("Location access denied:", error);
-          toast({
-            title: "Location access denied",
-            description: "Showing jobs with estimated distances",
-            variant: "destructive",
-          });
-        }
-      );
+  // Request user's location
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('unavailable');
+      toast({
+        title: "Location not available",
+        description: "Your browser doesn't support geolocation",
+        variant: "destructive",
+      });
+      return;
     }
+
+    setLocationStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocationStatus('granted');
+        toast({
+          title: "📍 Location enabled",
+          description: "Jobs are now sorted by distance from you",
+        });
+      },
+      (error) => {
+        console.error("Location error:", error);
+        setLocationStatus('denied');
+        
+        let errorMessage = "Showing jobs with estimated distances";
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = "Please enable location access in your browser settings";
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = "Location information unavailable";
+        } else if (error.code === error.TIMEOUT) {
+          errorMessage = "Location request timed out";
+        }
+        
+        toast({
+          title: "Location access denied",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+  };
+
+  // Get user's location on mount
+  useEffect(() => {
+    requestLocation();
   }, []);
 
   const fetchJobs = async (isAutoRefresh = false) => {
@@ -281,15 +313,33 @@ const Home = () => {
                 <MapPin className="w-5 h-5 text-primary" />
                 Nearby Jobs
               </h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => fetchJobs(true)}
-                disabled={isRefreshing}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fetchJobs(true)}
+                  disabled={isRefreshing}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </Button>
+                {locationStatus === 'denied' || locationStatus === 'unavailable' ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={requestLocation}
+                    className="text-destructive hover:text-destructive/80"
+                    title="Enable location to see accurate distances"
+                  >
+                    <NavigationOff className="w-4 h-4" />
+                  </Button>
+                ) : locationStatus === 'granted' ? (
+                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                    <Navigation className="w-3 h-3 mr-1" />
+                    Location On
+                  </Badge>
+                ) : null}
+              </div>
               {!loading && (
                 <span className="text-xs text-muted-foreground">
                   Updated {Math.floor((new Date().getTime() - lastRefresh.getTime()) / 1000)}s ago

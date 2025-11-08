@@ -1,23 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { MapPin, DollarSign, Clock, TrendingUp, User, Map as MapIcon, List } from "lucide-react";
+import { MapPin, DollarSign, Clock, TrendingUp, User, Map as MapIcon, List, Loader2 } from "lucide-react";
 import MapView from "@/components/MapView";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface MicroJob {
   id: string;
   title: string;
   location: string;
   reward: number;
-  duration: string;
+  duration: number | string;
   category: "trash" | "pollution" | "reporting";
-  urgency: "low" | "medium" | "high";
+  urgency: "low" | "medium" | "high" | "critical";
   distance: string;
   lat: number;
   lng: number;
+  description?: string;
+  reportedAt?: string;
 }
 
 const mockJobs: MicroJob[] = [
@@ -26,7 +30,7 @@ const mockJobs: MicroJob[] = [
     title: "Trash Pickup - Central Park",
     location: "Central Park, Zone A",
     reward: 15,
-    duration: "30 min",
+    duration: 30,
     category: "trash",
     urgency: "high",
     distance: "0.3 mi",
@@ -38,7 +42,7 @@ const mockJobs: MicroJob[] = [
     title: "Report Illegal Dumping",
     location: "Industrial Area, Sector 4",
     reward: 10,
-    duration: "15 min",
+    duration: 15,
     category: "reporting",
     urgency: "medium",
     distance: "1.2 mi",
@@ -50,7 +54,7 @@ const mockJobs: MicroJob[] = [
     title: "Beach Cleanup Initiative",
     location: "Coastal Beach Access Point",
     reward: 25,
-    duration: "1 hour",
+    duration: 60,
     category: "trash",
     urgency: "high",
     distance: "2.5 mi",
@@ -62,7 +66,7 @@ const mockJobs: MicroJob[] = [
     title: "Monitor Water Quality",
     location: "Riverside Park, North End",
     reward: 20,
-    duration: "45 min",
+    duration: 45,
     category: "pollution",
     urgency: "low",
     distance: "0.8 mi",
@@ -73,14 +77,50 @@ const mockJobs: MicroJob[] = [
 
 const Home = () => {
   const navigate = useNavigate();
-  const [jobs] = useState<MicroJob[]>(mockJobs);
+  const { toast } = useToast();
+  const [jobs, setJobs] = useState<MicroJob[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase.functions.invoke('get-environmental-jobs');
+        
+        if (error) throw error;
+        
+        if (data?.jobs) {
+          setJobs(data.jobs);
+        }
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        toast({
+          title: "Error loading jobs",
+          description: "Failed to load environmental jobs. Please try again.",
+          variant: "destructive",
+        });
+        // Fallback to mock data
+        setJobs(mockJobs);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [toast]);
 
   const getUrgencyColor = (urgency: string) => {
     switch(urgency) {
+      case "critical": return "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
       case "high": return "bg-destructive/10 text-destructive border-destructive/20";
       case "medium": return "bg-accent/10 text-accent border-accent/20";
       default: return "bg-muted text-muted-foreground border-border";
     }
+  };
+
+  const formatDuration = (duration: number | string) => {
+    if (typeof duration === 'string') return duration;
+    return `${duration} min`;
   };
 
   const getCategoryIcon = (category: string) => {
@@ -163,8 +203,13 @@ const Home = () => {
           </div>
 
           <TabsContent value="list" className="mt-0">
-            <div className="space-y-3 animate-slide-up">
-              {jobs.map((job, index) => (
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-3 animate-slide-up">
+                {jobs.map((job, index) => (
                 <Card 
                   key={job.id} 
                   className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary/50"
@@ -189,11 +234,11 @@ const Home = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-4 text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          {job.duration}
+                          {formatDuration(job.duration)}
                         </span>
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
@@ -207,8 +252,9 @@ const Home = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="map" className="mt-0">

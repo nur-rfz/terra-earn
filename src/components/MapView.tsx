@@ -10,12 +10,14 @@ interface MicroJob {
   title: string;
   location: string;
   reward: number;
-  duration: string;
+  duration: number | string;
   category: "trash" | "pollution" | "reporting";
-  urgency: "low" | "medium" | "high";
+  urgency: "low" | "medium" | "high" | "critical";
   distance: string;
   lat: number;
   lng: number;
+  description?: string;
+  reportedAt?: string;
 }
 
 interface MapViewProps {
@@ -27,6 +29,11 @@ const MapView = ({ jobs }: MapViewProps) => {
   const [apiKey, setApiKey] = useState<string>("");
   const [selectedJob, setSelectedJob] = useState<MicroJob | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const formatDuration = (duration: number | string) => {
+    if (typeof duration === 'string') return duration;
+    return `${duration} min`;
+  };
 
   useEffect(() => {
     const fetchApiKey = async () => {
@@ -80,7 +87,12 @@ const MapView = ({ jobs }: MapViewProps) => {
               onClick={() => setSelectedJob(job)}
             >
               <Pin
-                background={job.urgency === "high" ? "#ef4444" : job.urgency === "medium" ? "#f59e0b" : "#10b981"}
+                background={
+                  job.urgency === "critical" ? "#dc2626" :
+                  job.urgency === "high" ? "#ef4444" : 
+                  job.urgency === "medium" ? "#f59e0b" : 
+                  "#10b981"
+                }
                 borderColor="#fff"
                 glyphColor="#fff"
               />
@@ -102,7 +114,7 @@ const MapView = ({ jobs }: MapViewProps) => {
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {selectedJob.duration}
+                      {formatDuration(selectedJob.duration)}
                     </div>
                     <div className="flex items-center gap-1 text-primary font-semibold">
                       <DollarSign className="w-3 h-3" />

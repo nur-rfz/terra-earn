@@ -127,21 +127,6 @@ const Home = () => {
       (error) => {
         console.error("Location error:", error);
         setLocationStatus('denied');
-        
-        let errorMessage = "Showing jobs with estimated distances";
-        if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = "Please enable location access in your browser settings";
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = "Location information unavailable";
-        } else if (error.code === error.TIMEOUT) {
-          errorMessage = "Location request timed out";
-        }
-        
-        toast({
-          title: "Location access denied",
-          description: errorMessage,
-          variant: "destructive",
-        });
       },
       {
         enableHighAccuracy: true,

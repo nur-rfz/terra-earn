@@ -1,15 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, DollarSign, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, MapPin, DollarSign, Clock, CheckCircle2, AlertCircle, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { PhotoUpload } from "@/components/PhotoUpload";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<"available" | "accepted" | "in-progress" | "completed">("available");
+  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
+  const [beforePhoto, setBeforePhoto] = useState<File | null>(null);
+  const [afterPhoto, setAfterPhoto] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to accept jobs");
+      navigate("/login");
+    } else {
+      setUser(user);
+    }
+  };
 
   // Mock job data
   const job = {
@@ -49,11 +77,70 @@ const JobDetails = () => {
   };
 
   const handleCompleteJob = () => {
-    setStatus("completed");
-    toast.success("Job completed! Your submission is being verified.", {
-      description: `You earned $${job.reward}!`
-    });
-    setTimeout(() => navigate("/dashboard"), 2000);
+    setShowPhotoDialog(true);
+  };
+
+  const uploadPhoto = async (file: File, photoType: "before" | "after"): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${id}_${photoType}_${Date.now()}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('job-photos')
+      .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('job-photos')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
+  const handleSubmitCompletion = async () => {
+    if (!beforePhoto || !afterPhoto) {
+      toast.error("Please upload both before and after photos");
+      return;
+    }
+
+    if (!user) {
+      toast.error("Please sign in to submit");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const beforeUrl = await uploadPhoto(beforePhoto, "before");
+      const afterUrl = await uploadPhoto(afterPhoto, "after");
+
+      const { error } = await supabase
+        .from('job_completions')
+        .insert({
+          user_id: user.id,
+          job_id: id,
+          before_photo_url: beforeUrl,
+          after_photo_url: afterUrl,
+          reward_amount: job.reward,
+          status: 'pending_verification'
+        });
+
+      if (error) throw error;
+
+      setStatus("completed");
+      setShowPhotoDialog(false);
+      toast.success("Job completed! Your submission is being verified.", {
+        description: `You earned $${job.reward}!`
+      });
+      setTimeout(() => navigate("/dashboard"), 2000);
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      toast.error("Failed to submit job completion", {
+        description: error.message
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusColor = () => {
@@ -225,6 +312,50 @@ const JobDetails = () => {
           )}
         </div>
       </div>
+
+      {/* Photo Upload Dialog */}
+      <Dialog open={showPhotoDialog} onOpenChange={setShowPhotoDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="w-5 h-5 text-primary" />
+              Upload Verification Photos
+            </DialogTitle>
+            <DialogDescription>
+              Take before and after photos to verify job completion
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <PhotoUpload
+              label="Before Photo"
+              onPhotoCapture={setBeforePhoto}
+            />
+            <PhotoUpload
+              label="After Photo"
+              onPhotoCapture={setAfterPhoto}
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowPhotoDialog(false)}
+              className="flex-1"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitCompletion}
+              className="flex-1"
+              disabled={isSubmitting || !beforePhoto || !afterPhoto}
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

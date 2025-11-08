@@ -14,7 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      job_completions: {
+        Row: {
+          after_photo_url: string | null
+          before_photo_url: string | null
+          completed_at: string
+          id: string
+          job_id: string
+          reward_amount: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          after_photo_url?: string | null
+          before_photo_url?: string | null
+          completed_at?: string
+          id?: string
+          job_id: string
+          reward_amount: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          after_photo_url?: string | null
+          before_photo_url?: string | null
+          completed_at?: string
+          id?: string
+          job_id?: string
+          reward_amount?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -3,40 +3,52 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, DollarSign, Clock, CheckCircle2, AlertCircle, Camera } from "lucide-react";
+import { ArrowLeft, MapPin, DollarSign, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { PhotoUpload } from "@/components/PhotoUpload";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { JobClaimFlow } from "@/components/JobClaimFlow";
 
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"available" | "accepted" | "in-progress" | "completed">("available");
-  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
-  const [beforePhoto, setBeforePhoto] = useState<File | null>(null);
-  const [afterPhoto, setAfterPhoto] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [completionId, setCompletionId] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    checkAuthAndJobStatus();
+  }, [id]);
 
-  const checkAuth = async () => {
+  const checkAuthAndJobStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please sign in to accept jobs");
       navigate("/login");
-    } else {
-      setUser(user);
+      return;
     }
+
+    // Check if user has already claimed this job
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.functions.invoke('job-actions', {
+        body: { action: 'check', jobId: id },
+      });
+
+      if (error) throw error;
+
+      if (data?.data?.completion) {
+        setCompletionId(data.data.completion.id);
+        setStatus(data.data.completion.status);
+      }
+    } catch (error) {
+      console.error('Error checking job status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = () => {
+    checkAuthAndJobStatus();
   };
 
   // Mock job data
@@ -64,91 +76,15 @@ const JobDetails = () => {
     ]
   };
 
-  const handleAcceptJob = () => {
-    setStatus("accepted");
-    toast.success("Job accepted! Head to the location to begin.", {
-      description: "Don't forget to check in when you arrive."
-    });
-  };
-
-  const handleStartJob = () => {
-    setStatus("in-progress");
-    toast.info("Job started! Complete the task and submit photos when done.");
-  };
-
-  const handleCompleteJob = () => {
-    setShowPhotoDialog(true);
-  };
-
-  const uploadPhoto = async (file: File, photoType: "before" | "after"): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${id}_${photoType}_${Date.now()}.${fileExt}`;
+  const getStatusBadge = () => {
+    if (!status) return { text: "Available", color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30" };
     
-    const { error: uploadError } = await supabase.storage
-      .from('job-photos')
-      .upload(fileName, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('job-photos')
-      .getPublicUrl(fileName);
-
-    return publicUrl;
-  };
-
-  const handleSubmitCompletion = async () => {
-    if (!beforePhoto || !afterPhoto) {
-      toast.error("Please upload both before and after photos");
-      return;
-    }
-
-    if (!user) {
-      toast.error("Please sign in to submit");
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      const beforeUrl = await uploadPhoto(beforePhoto, "before");
-      const afterUrl = await uploadPhoto(afterPhoto, "after");
-
-      const { error } = await supabase
-        .from('job_completions')
-        .insert({
-          user_id: user.id,
-          job_id: id,
-          before_photo_url: beforeUrl,
-          after_photo_url: afterUrl,
-          reward_amount: job.reward,
-          status: 'pending_verification'
-        });
-
-      if (error) throw error;
-
-      setStatus("completed");
-      setShowPhotoDialog(false);
-      toast.success("Job completed! Your submission is being verified.", {
-        description: `You earned $${job.reward}!`
-      });
-      setTimeout(() => navigate("/dashboard"), 2000);
-    } catch (error: any) {
-      console.error('Submission error:', error);
-      toast.error("Failed to submit job completion", {
-        description: error.message
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getStatusColor = () => {
     switch(status) {
-      case "accepted": return "bg-accent/10 text-accent border-accent/20";
-      case "in-progress": return "bg-primary/10 text-primary border-primary/20";
-      case "completed": return "bg-primary/10 text-primary border-primary/20";
-      default: return "bg-muted text-muted-foreground border-border";
+      case "claimed": return { text: "Claimed", color: "bg-accent/10 text-accent border-accent/20" };
+      case "in_progress": return { text: "In Progress", color: "bg-primary/10 text-primary border-primary/20" };
+      case "completed": return { text: "Completed", color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30" };
+      case "pending_verification": return { text: "Under Review", color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/30" };
+      default: return { text: "Available", color: "bg-muted text-muted-foreground border-border" };
     }
   };
 
@@ -185,8 +121,8 @@ const JobDetails = () => {
                   {job.location}
                 </CardDescription>
               </div>
-              <Badge className={getStatusColor()} variant="outline">
-                {status}
+              <Badge className={getStatusBadge().color} variant="outline">
+                {getStatusBadge().text}
               </Badge>
             </div>
           </CardHeader>
@@ -268,94 +204,21 @@ const JobDetails = () => {
             </ol>
           </CardContent>
         </Card>
+
+        {/* Job Claim Flow */}
+        {!loading && (
+          <div className="animate-slide-up" style={{ animationDelay: "0.3s" }}>
+            <JobClaimFlow
+              jobId={id!}
+              jobTitle={job.title}
+              rewardAmount={job.reward}
+              completionId={completionId}
+              status={status}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
+        )}
       </main>
-
-      {/* Action Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-card border-t border-border shadow-lg">
-        <div className="container mx-auto">
-          {status === "available" && (
-            <Button 
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
-              size="lg"
-              onClick={handleAcceptJob}
-            >
-              Accept Job
-            </Button>
-          )}
-          {status === "accepted" && (
-            <Button 
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-md"
-              size="lg"
-              onClick={handleStartJob}
-            >
-              Start Job
-            </Button>
-          )}
-          {status === "in-progress" && (
-            <Button 
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
-              size="lg"
-              onClick={handleCompleteJob}
-            >
-              Complete & Submit
-            </Button>
-          )}
-          {status === "completed" && (
-            <Button 
-              className="w-full bg-primary/10 text-primary"
-              size="lg"
-              disabled
-            >
-              <CheckCircle2 className="w-5 h-5 mr-2" />
-              Completed
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Photo Upload Dialog */}
-      <Dialog open={showPhotoDialog} onOpenChange={setShowPhotoDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Camera className="w-5 h-5 text-primary" />
-              Upload Verification Photos
-            </DialogTitle>
-            <DialogDescription>
-              Take before and after photos to verify job completion
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <PhotoUpload
-              label="Before Photo"
-              onPhotoCapture={setBeforePhoto}
-            />
-            <PhotoUpload
-              label="After Photo"
-              onPhotoCapture={setAfterPhoto}
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowPhotoDialog(false)}
-              className="flex-1"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmitCompletion}
-              className="flex-1"
-              disabled={isSubmitting || !beforePhoto || !afterPhoto}
-            >
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

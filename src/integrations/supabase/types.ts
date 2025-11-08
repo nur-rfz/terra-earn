@@ -18,32 +18,44 @@ export type Database = {
         Row: {
           after_photo_url: string | null
           before_photo_url: string | null
+          claimed_at: string | null
           completed_at: string
           id: string
           job_id: string
+          notes: string | null
           reward_amount: number
+          started_at: string | null
           status: string
           user_id: string
+          verified_at: string | null
         }
         Insert: {
           after_photo_url?: string | null
           before_photo_url?: string | null
+          claimed_at?: string | null
           completed_at?: string
           id?: string
           job_id: string
+          notes?: string | null
           reward_amount: number
+          started_at?: string | null
           status?: string
           user_id: string
+          verified_at?: string | null
         }
         Update: {
           after_photo_url?: string | null
           before_photo_url?: string | null
+          claimed_at?: string | null
           completed_at?: string
           id?: string
           job_id?: string
+          notes?: string | null
           reward_amount?: number
+          started_at?: string | null
           status?: string
           user_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -52,7 +64,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_job: { Args: { p_job_id: string }; Returns: string }
+      is_job_available: { Args: { p_job_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

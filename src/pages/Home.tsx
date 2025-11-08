@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { MapPin, DollarSign, Clock, TrendingUp, User, Map as MapIcon, List, Loader2 } from "lucide-react";
+import { MapPin, DollarSign, Clock, TrendingUp, User, Map as MapIcon, List, Loader2, RefreshCw } from "lucide-react";
 import MapView from "@/components/MapView";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -80,20 +80,50 @@ const Home = () => {
   const { toast } = useToast();
   const [jobs, setJobs] = useState<MicroJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const previousJobIds = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
+  const fetchJobs = async (isAutoRefresh = false) => {
+    try {
+      if (isAutoRefresh) {
+        setIsRefreshing(true);
+      } else {
         setLoading(true);
-        const { data, error } = await supabase.functions.invoke('get-environmental-jobs');
+      }
+      
+      const { data, error } = await supabase.functions.invoke('get-environmental-jobs');
+      
+      if (error) throw error;
+      
+      if (data?.jobs) {
+        const newJobs = data.jobs;
         
-        if (error) throw error;
-        
-        if (data?.jobs) {
-          setJobs(data.jobs);
+        // Detect new critical/high urgency jobs
+        if (isAutoRefresh && previousJobIds.current.size > 0) {
+          const criticalNewJobs = newJobs.filter(
+            (job: MicroJob) => 
+              !previousJobIds.current.has(job.id) && 
+              (job.urgency === 'critical' || job.urgency === 'high')
+          );
+          
+          if (criticalNewJobs.length > 0) {
+            toast({
+              title: "🚨 New Critical Jobs Available!",
+              description: `${criticalNewJobs.length} urgent cleanup ${criticalNewJobs.length === 1 ? 'opportunity' : 'opportunities'} nearby`,
+              duration: 5000,
+            });
+          }
         }
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
+        
+        // Update jobs and track IDs
+        previousJobIds.current = new Set(newJobs.map((job: MicroJob) => job.id));
+        setJobs(newJobs);
+        setLastRefresh(new Date());
+      }
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      if (!isAutoRefresh) {
         toast({
           title: "Error loading jobs",
           description: "Failed to load environmental jobs. Please try again.",
@@ -101,13 +131,24 @@ const Home = () => {
         });
         // Fallback to mock data
         setJobs(mockJobs);
-      } finally {
-        setLoading(false);
+        previousJobIds.current = new Set(mockJobs.map(job => job.id));
       }
-    };
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
+  useEffect(() => {
     fetchJobs();
-  }, [toast]);
+
+    // Auto-refresh every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchJobs(true);
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const getUrgencyColor = (urgency: string) => {
     switch(urgency) {
@@ -175,10 +216,26 @@ const Home = () => {
         {/* View Toggle and Jobs */}
         <Tabs defaultValue="list" className="w-full">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-primary" />
-              Nearby Jobs
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                Nearby Jobs
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fetchJobs(true)}
+                disabled={isRefreshing}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
+              {!loading && (
+                <span className="text-xs text-muted-foreground">
+                  Updated {Math.floor((new Date().getTime() - lastRefresh.getTime()) / 1000)}s ago
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <TabsList className="grid w-[140px] grid-cols-2">
                 <TabsTrigger value="list" className="text-xs">

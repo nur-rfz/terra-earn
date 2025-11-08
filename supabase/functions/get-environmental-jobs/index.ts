@@ -5,16 +5,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Real coastal locations with high debris activity
+// Coastal locations in disadvantaged countries with high marine debris activity
 const locations = [
-  { name: "Santa Monica Beach", lat: 34.0195, lng: -118.4912, city: "Santa Monica, CA" },
-  { name: "Coney Island Beach", lat: 40.5755, lng: -73.9707, city: "Brooklyn, NY" },
-  { name: "Miami Beach", lat: 25.7907, lng: -80.1300, city: "Miami, FL" },
-  { name: "Galveston Beach", lat: 29.3013, lng: -94.7977, city: "Galveston, TX" },
-  { name: "Ocean Beach", lat: 37.7694, lng: -122.5108, city: "San Francisco, CA" },
-  { name: "Huntington Beach", lat: 33.6595, lng: -117.9988, city: "Huntington Beach, CA" },
-  { name: "Myrtle Beach", lat: 33.6891, lng: -78.8867, city: "Myrtle Beach, SC" },
-  { name: "Venice Beach", lat: 33.9850, lng: -118.4695, city: "Los Angeles, CA" },
+  // Southeast Asia
+  { name: "Manila Bay", lat: 14.5639, lng: 120.9726, city: "Manila, Philippines" },
+  { name: "Kuta Beach", lat: -8.7185, lng: 115.1690, city: "Bali, Indonesia" },
+  { name: "Pattaya Beach", lat: 12.9236, lng: 100.8825, city: "Pattaya, Thailand" },
+  { name: "Vung Tau Beach", lat: 10.3460, lng: 107.0843, city: "Vung Tau, Vietnam" },
+  
+  // South Asia
+  { name: "Juhu Beach", lat: 19.0990, lng: 72.8267, city: "Mumbai, India" },
+  { name: "Versova Beach", lat: 19.1342, lng: 72.8119, city: "Mumbai, India" },
+  { name: "Cox's Bazar", lat: 21.4272, lng: 92.0058, city: "Chittagong, Bangladesh" },
+  { name: "Karachi Beach", lat: 24.8230, lng: 67.0285, city: "Karachi, Pakistan" },
+  
+  // Africa
+  { name: "Labadi Beach", lat: 5.5467, lng: -0.1515, city: "Accra, Ghana" },
+  { name: "Lekki Beach", lat: 6.4281, lng: 3.4219, city: "Lagos, Nigeria" },
+  { name: "Durban Beach", lat: -29.8587, lng: 31.0218, city: "Durban, South Africa" },
+  { name: "Mombasa Beach", lat: -4.0435, lng: 39.6682, city: "Mombasa, Kenya" },
+  
+  // Latin America
+  { name: "Copacabana Beach", lat: -22.9711, lng: -43.1822, city: "Rio de Janeiro, Brazil" },
+  { name: "Cartagena Beach", lat: 10.3932, lng: -75.4832, city: "Cartagena, Colombia" },
+  { name: "Lima Beaches", lat: -12.0464, lng: -77.0428, city: "Lima, Peru" },
+  { name: "Santo Domingo Beach", lat: 18.4861, lng: -69.9312, city: "Santo Domingo, Dominican Republic" },
+  
+  // Caribbean
+  { name: "Kingston Harbor", lat: 17.9714, lng: -76.7931, city: "Kingston, Jamaica" },
+  { name: "Port-au-Prince Bay", lat: 18.5944, lng: -72.3074, city: "Port-au-Prince, Haiti" },
+  
+  // Middle East
+  { name: "Alexandria Beach", lat: 31.2001, lng: 29.9187, city: "Alexandria, Egypt" },
+  { name: "Jeddah Beach", lat: 21.5433, lng: 39.1728, city: "Jeddah, Saudi Arabia" },
 ];
 
 // Marine Debris Tracker categories and common items
@@ -53,8 +76,8 @@ function generateJobs() {
   const jobs = [];
   const usedLocations = new Set();
   
-  // Generate 12-15 jobs across different locations
-  const jobCount = 12 + Math.floor(Math.random() * 4);
+  // Generate 15-20 jobs across different locations
+  const jobCount = 15 + Math.floor(Math.random() * 6);
   
   for (let i = 0; i < jobCount; i++) {
     // Select a location, preferring unused ones

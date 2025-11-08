@@ -82,7 +82,47 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const previousJobIds = useRef<Set<string>>(new Set());
+
+  // Calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Get user's location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          toast({
+            title: "Location enabled",
+            description: "Showing jobs sorted by distance from your location",
+          });
+        },
+        (error) => {
+          console.log("Location access denied:", error);
+          toast({
+            title: "Location access denied",
+            description: "Showing jobs with estimated distances",
+            variant: "destructive",
+          });
+        }
+      );
+    }
+  }, []);
 
   const fetchJobs = async (isAutoRefresh = false) => {
     try {
@@ -97,7 +137,27 @@ const Home = () => {
       if (error) throw error;
       
       if (data?.jobs) {
-        const newJobs = data.jobs;
+        let newJobs = data.jobs;
+        
+        // Calculate actual distances if user location is available
+        if (userLocation) {
+          newJobs = newJobs.map((job: MicroJob) => {
+            const distance = calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              job.lat,
+              job.lng
+            );
+            return {
+              ...job,
+              distance: `${distance.toFixed(1)} mi`,
+              calculatedDistance: distance,
+            };
+          });
+          
+          // Sort by distance
+          newJobs.sort((a: any, b: any) => a.calculatedDistance - b.calculatedDistance);
+        }
         
         // Detect new critical/high urgency jobs
         if (isAutoRefresh && previousJobIds.current.size > 0) {

@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, DollarSign, Clock, TrendingUp, User } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { MapPin, DollarSign, Clock, TrendingUp, User, Map as MapIcon, List } from "lucide-react";
+import MapView from "@/components/MapView";
 
 interface MicroJob {
   id: string;
@@ -14,6 +16,8 @@ interface MicroJob {
   category: "trash" | "pollution" | "reporting";
   urgency: "low" | "medium" | "high";
   distance: string;
+  lat: number;
+  lng: number;
 }
 
 const mockJobs: MicroJob[] = [
@@ -25,7 +29,9 @@ const mockJobs: MicroJob[] = [
     duration: "30 min",
     category: "trash",
     urgency: "high",
-    distance: "0.3 mi"
+    distance: "0.3 mi",
+    lat: 40.785091,
+    lng: -73.968285
   },
   {
     id: "2",
@@ -35,7 +41,9 @@ const mockJobs: MicroJob[] = [
     duration: "15 min",
     category: "reporting",
     urgency: "medium",
-    distance: "1.2 mi"
+    distance: "1.2 mi",
+    lat: 40.778912,
+    lng: -73.956542
   },
   {
     id: "3",
@@ -45,7 +53,9 @@ const mockJobs: MicroJob[] = [
     duration: "1 hour",
     category: "trash",
     urgency: "high",
-    distance: "2.5 mi"
+    distance: "2.5 mi",
+    lat: 40.792865,
+    lng: -73.978523
   },
   {
     id: "4",
@@ -55,7 +65,9 @@ const mockJobs: MicroJob[] = [
     duration: "45 min",
     category: "pollution",
     urgency: "low",
-    distance: "0.8 mi"
+    distance: "0.8 mi",
+    lat: 40.788234,
+    lng: -73.965432
   },
 ];
 
@@ -120,70 +132,89 @@ const Home = () => {
           </Card>
         </div>
 
-        {/* Section Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" />
-            Nearby Jobs
-          </h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/dashboard")}
-            className="text-primary hover:text-primary/80"
-          >
-            <TrendingUp className="w-4 h-4 mr-1" />
-            My Impact
-          </Button>
-        </div>
+        {/* View Toggle and Jobs */}
+        <Tabs defaultValue="list" className="w-full">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" />
+              Nearby Jobs
+            </h2>
+            <div className="flex items-center gap-2">
+              <TabsList className="grid w-[140px] grid-cols-2">
+                <TabsTrigger value="list" className="text-xs">
+                  <List className="w-4 h-4 mr-1" />
+                  List
+                </TabsTrigger>
+                <TabsTrigger value="map" className="text-xs">
+                  <MapIcon className="w-4 h-4 mr-1" />
+                  Map
+                </TabsTrigger>
+              </TabsList>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/dashboard")}
+                className="text-primary hover:text-primary/80"
+              >
+                <TrendingUp className="w-4 h-4 mr-1" />
+                My Impact
+              </Button>
+            </div>
+          </div>
 
-        {/* Jobs List */}
-        <div className="space-y-3 animate-slide-up">
-          {jobs.map((job, index) => (
-            <Card 
-              key={job.id} 
-              className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary/50"
-              onClick={() => navigate(`/job/${job.id}`)}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <CardTitle className="text-base font-semibold text-foreground mb-1 flex items-center gap-2">
-                      <span>{getCategoryIcon(job.category)}</span>
-                      {job.title}
-                    </CardTitle>
-                    <CardDescription className="text-sm flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {job.location}
-                    </CardDescription>
-                  </div>
-                  <Badge className={getUrgencyColor(job.urgency)} variant="outline">
-                    {job.urgency}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-4 text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {job.duration}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {job.distance}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 font-semibold text-primary">
-                    <DollarSign className="w-4 h-4" />
-                    {job.reward}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+          <TabsContent value="list" className="mt-0">
+            <div className="space-y-3 animate-slide-up">
+              {jobs.map((job, index) => (
+                <Card 
+                  key={job.id} 
+                  className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary/50"
+                  onClick={() => navigate(`/job/${job.id}`)}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <CardTitle className="text-base font-semibold text-foreground mb-1 flex items-center gap-2">
+                          <span>{getCategoryIcon(job.category)}</span>
+                          {job.title}
+                        </CardTitle>
+                        <CardDescription className="text-sm flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {job.location}
+                        </CardDescription>
+                      </div>
+                      <Badge className={getUrgencyColor(job.urgency)} variant="outline">
+                        {job.urgency}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-4 text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {job.duration}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          {job.distance}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 font-semibold text-primary">
+                        <DollarSign className="w-4 h-4" />
+                        {job.reward}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="map" className="mt-0">
+            <MapView jobs={jobs} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

@@ -5,39 +5,60 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Coastal locations in disadvantaged countries with high marine debris activity
+// South India coastal and inland locations with environmental hazards
 const locations = [
-  // Southeast Asia
-  { name: "Manila Bay", lat: 14.5639, lng: 120.9726, city: "Manila, Philippines" },
-  { name: "Kuta Beach", lat: -8.7185, lng: 115.1690, city: "Bali, Indonesia" },
-  { name: "Pattaya Beach", lat: 12.9236, lng: 100.8825, city: "Pattaya, Thailand" },
-  { name: "Vung Tau Beach", lat: 10.3460, lng: 107.0843, city: "Vung Tau, Vietnam" },
+  // Kerala Coast
+  { name: "Kovalam Beach", lat: 8.4004, lng: 76.9790, city: "Thiruvananthapuram, Kerala" },
+  { name: "Varkala Beach", lat: 8.7379, lng: 76.7163, city: "Varkala, Kerala" },
+  { name: "Alappuzha Beach", lat: 9.4981, lng: 76.3388, city: "Alappuzha, Kerala" },
+  { name: "Fort Kochi Beach", lat: 9.9654, lng: 76.2424, city: "Kochi, Kerala" },
+  { name: "Kozhikode Beach", lat: 11.2588, lng: 75.7804, city: "Kozhikode, Kerala" },
+  { name: "Kannur Beach", lat: 11.8745, lng: 75.3704, city: "Kannur, Kerala" },
+  { name: "Munambam Beach", lat: 10.1726, lng: 76.1751, city: "Ernakulam, Kerala" },
+  { name: "Cherai Beach", lat: 10.1426, lng: 76.1784, city: "Ernakulam, Kerala" },
   
-  // South Asia
-  { name: "Juhu Beach", lat: 19.0990, lng: 72.8267, city: "Mumbai, India" },
-  { name: "Versova Beach", lat: 19.1342, lng: 72.8119, city: "Mumbai, India" },
-  { name: "Cox's Bazar", lat: 21.4272, lng: 92.0058, city: "Chittagong, Bangladesh" },
-  { name: "Karachi Beach", lat: 24.8230, lng: 67.0285, city: "Karachi, Pakistan" },
+  // Tamil Nadu Coast
+  { name: "Marina Beach", lat: 13.0499, lng: 80.2824, city: "Chennai, Tamil Nadu" },
+  { name: "Elliot's Beach", lat: 13.0067, lng: 80.2669, city: "Chennai, Tamil Nadu" },
+  { name: "Mahabalipuram Beach", lat: 12.6269, lng: 80.1992, city: "Mahabalipuram, Tamil Nadu" },
+  { name: "Pondicherry Beach", lat: 11.9139, lng: 79.8145, city: "Pondicherry" },
+  { name: "Rameswaram Beach", lat: 9.2876, lng: 79.3129, city: "Rameswaram, Tamil Nadu" },
+  { name: "Kanyakumari Beach", lat: 8.0883, lng: 77.5385, city: "Kanyakumari, Tamil Nadu" },
+  { name: "Tuticorin Beach", lat: 8.8053, lng: 78.1455, city: "Tuticorin, Tamil Nadu" },
+  { name: "Nagapattinam Beach", lat: 10.7672, lng: 79.8449, city: "Nagapattinam, Tamil Nadu" },
+  { name: "Cuddalore Beach", lat: 11.7480, lng: 79.7714, city: "Cuddalore, Tamil Nadu" },
   
-  // Africa
-  { name: "Labadi Beach", lat: 5.5467, lng: -0.1515, city: "Accra, Ghana" },
-  { name: "Lekki Beach", lat: 6.4281, lng: 3.4219, city: "Lagos, Nigeria" },
-  { name: "Durban Beach", lat: -29.8587, lng: 31.0218, city: "Durban, South Africa" },
-  { name: "Mombasa Beach", lat: -4.0435, lng: 39.6682, city: "Mombasa, Kenya" },
+  // Karnataka Coast
+  { name: "Mangalore Beach", lat: 12.8698, lng: 74.8420, city: "Mangalore, Karnataka" },
+  { name: "Karwar Beach", lat: 14.8138, lng: 74.1290, city: "Karwar, Karnataka" },
+  { name: "Udupi Beach", lat: 13.3409, lng: 74.7421, city: "Udupi, Karnataka" },
+  { name: "Gokarna Beach", lat: 14.5479, lng: 74.3188, city: "Gokarna, Karnataka" },
+  { name: "Malpe Beach", lat: 13.3503, lng: 74.7033, city: "Udupi, Karnataka" },
   
-  // Latin America
-  { name: "Copacabana Beach", lat: -22.9711, lng: -43.1822, city: "Rio de Janeiro, Brazil" },
-  { name: "Cartagena Beach", lat: 10.3932, lng: -75.4832, city: "Cartagena, Colombia" },
-  { name: "Lima Beaches", lat: -12.0464, lng: -77.0428, city: "Lima, Peru" },
-  { name: "Santo Domingo Beach", lat: 18.4861, lng: -69.9312, city: "Santo Domingo, Dominican Republic" },
+  // Andhra Pradesh Coast
+  { name: "Visakhapatnam Beach", lat: 17.7231, lng: 83.3012, city: "Visakhapatnam, Andhra Pradesh" },
+  { name: "Rushikonda Beach", lat: 17.7833, lng: 83.3833, city: "Visakhapatnam, Andhra Pradesh" },
+  { name: "Bheemunipatnam Beach", lat: 17.8902, lng: 83.4545, city: "Visakhapatnam, Andhra Pradesh" },
+  { name: "Kakinada Beach", lat: 16.9891, lng: 82.2475, city: "Kakinada, Andhra Pradesh" },
+  { name: "Machilipatnam Beach", lat: 16.1875, lng: 81.1389, city: "Machilipatnam, Andhra Pradesh" },
+  { name: "Nellore Beach", lat: 14.4426, lng: 79.9865, city: "Nellore, Andhra Pradesh" },
   
-  // Caribbean
-  { name: "Kingston Harbor", lat: 17.9714, lng: -76.7931, city: "Kingston, Jamaica" },
-  { name: "Port-au-Prince Bay", lat: 18.5944, lng: -72.3074, city: "Port-au-Prince, Haiti" },
+  // Inland South India - Rivers and Lakes
+  { name: "Periyar River", lat: 10.0261, lng: 76.2711, city: "Ernakulam, Kerala" },
+  { name: "Cauvery River", lat: 12.4244, lng: 78.7194, city: "Tiruchirappalli, Tamil Nadu" },
+  { name: "Krishna River", lat: 16.5062, lng: 80.6480, city: "Vijayawada, Andhra Pradesh" },
+  { name: "Tungabhadra River", lat: 15.3350, lng: 76.4600, city: "Hampi, Karnataka" },
+  { name: "Vembanad Lake", lat: 9.6050, lng: 76.4010, city: "Kottayam, Kerala" },
+  { name: "Ulsoor Lake", lat: 12.9897, lng: 77.6215, city: "Bangalore, Karnataka" },
+  { name: "Hussain Sagar Lake", lat: 17.4239, lng: 78.4738, city: "Hyderabad, Telangana" },
   
-  // Middle East
-  { name: "Alexandria Beach", lat: 31.2001, lng: 29.9187, city: "Alexandria, Egypt" },
-  { name: "Jeddah Beach", lat: 21.5433, lng: 39.1728, city: "Jeddah, Saudi Arabia" },
+  // Urban Areas
+  { name: "Chennai Port", lat: 13.1067, lng: 80.3000, city: "Chennai, Tamil Nadu" },
+  { name: "Kochi Port", lat: 9.9674, lng: 76.2663, city: "Kochi, Kerala" },
+  { name: "Visakhapatnam Port", lat: 17.6868, lng: 83.2185, city: "Visakhapatnam, Andhra Pradesh" },
+  { name: "Mangalore Port", lat: 12.9141, lng: 74.8560, city: "Mangalore, Karnataka" },
+  { name: "Bangalore Lakes", lat: 12.9716, lng: 77.5946, city: "Bangalore, Karnataka" },
+  { name: "Hyderabad Lakes", lat: 17.3850, lng: 78.4867, city: "Hyderabad, Telangana" },
 ];
 
 // Marine Debris Tracker categories and common items
@@ -74,30 +95,21 @@ const debrisJobs = [
 
 function generateJobs() {
   const jobs = [];
-  const usedLocations = new Set();
   
-  // Generate 15-20 jobs across different locations
-  const jobCount = 15 + Math.floor(Math.random() * 6);
+  // Generate 1000 jobs across South India locations
+  const jobCount = 1000;
   
   for (let i = 0; i < jobCount; i++) {
-    // Select a location, preferring unused ones
-    let location;
-    if (usedLocations.size < locations.length) {
-      do {
-        location = locations[Math.floor(Math.random() * locations.length)];
-      } while (usedLocations.has(location.name) && usedLocations.size < locations.length);
-      usedLocations.add(location.name);
-    } else {
-      location = locations[Math.floor(Math.random() * locations.length)];
-    }
+    // Select a random location (reusing is fine for 1000 jobs)
+    const location = locations[Math.floor(Math.random() * locations.length)];
     
     // Select debris type
     const categoryData = debrisJobs[Math.floor(Math.random() * debrisJobs.length)];
     const item = categoryData.items[Math.floor(Math.random() * categoryData.items.length)];
     
-    // Add slight coordinate variation for jobs at same beach
-    const latVariation = (Math.random() - 0.5) * 0.01;
-    const lngVariation = (Math.random() - 0.5) * 0.01;
+    // Add slight coordinate variation for jobs at same location (up to ~1.1km spread)
+    const latVariation = (Math.random() - 0.5) * 0.02;
+    const lngVariation = (Math.random() - 0.5) * 0.02;
     
     // Calculate distance (simulated - in real app would use user's location)
     const distance = (Math.random() * 15 + 0.5).toFixed(1);

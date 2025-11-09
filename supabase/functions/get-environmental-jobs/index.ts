@@ -301,44 +301,69 @@ const debrisJobs = [
   }
 ];
 
+// Simple hash function for stable IDs
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
+}
+
 function generateJobs() {
   const jobs = [];
   
   // Generate 1000 jobs across South India locations
   const jobCount = 1000;
   
+  // Use a fixed seed for consistent randomization
+  let seed = 12345;
+  const seededRandom = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+  
   for (let i = 0; i < jobCount; i++) {
-    // Select a random location (reusing is fine for 1000 jobs)
-    const location = locations[Math.floor(Math.random() * locations.length)];
+    // Select a location using seeded random
+    const location = locations[Math.floor(seededRandom() * locations.length)];
     
     // Select debris type
-    const categoryData = debrisJobs[Math.floor(Math.random() * debrisJobs.length)];
-    const item = categoryData.items[Math.floor(Math.random() * categoryData.items.length)];
+    const categoryData = debrisJobs[Math.floor(seededRandom() * debrisJobs.length)];
+    const item = categoryData.items[Math.floor(seededRandom() * categoryData.items.length)];
     
     // Add slight coordinate variation for jobs at same location (up to ~1.1km spread)
-    const latVariation = (Math.random() - 0.5) * 0.02;
-    const lngVariation = (Math.random() - 0.5) * 0.02;
+    const latVariation = (seededRandom() - 0.5) * 0.02;
+    const lngVariation = (seededRandom() - 0.5) * 0.02;
+    
+    const finalLat = location.lat + latVariation;
+    const finalLng = location.lng + lngVariation;
     
     // Calculate distance (simulated - in real app would use user's location)
-    const distance = (Math.random() * 15 + 0.5).toFixed(1);
+    const distance = (seededRandom() * 15 + 0.5).toFixed(1);
     
     // Select random title and description for variety
-    const title = item.titles[Math.floor(Math.random() * item.titles.length)];
-    const description = item.descriptions[Math.floor(Math.random() * item.descriptions.length)];
+    const title = item.titles[Math.floor(seededRandom() * item.titles.length)];
+    const description = item.descriptions[Math.floor(seededRandom() * item.descriptions.length)];
+    
+    // Generate stable ID based on location + item type + position
+    const idString = `${location.name}-${item.type}-${i}`;
+    const stableId = `job-${hashString(idString)}`;
     
     jobs.push({
-      id: `job-${Date.now()}-${i}`,
+      id: stableId,
       title: title,
       location: location.city,
-      reward: item.baseReward + Math.floor(Math.random() * 8) - 2, // More variety in rewards
-      duration: Math.floor(Math.random() * 40) + 10, // 10-50 minutes
+      reward: item.baseReward + Math.floor(seededRandom() * 8) - 2, // More variety in rewards
+      duration: Math.floor(seededRandom() * 40) + 10, // 10-50 minutes
       category: categoryData.category,
       urgency: item.urgency,
       distance: `${distance} mi`,
-      lat: location.lat + latVariation,
-      lng: location.lng + lngVariation,
+      lat: finalLat,
+      lng: finalLng,
       description: `${description}. Located at ${location.name}. Part of Marine Debris Tracker initiative.`,
-      reportedAt: new Date(Date.now() - Math.random() * 86400000 * 7).toISOString(), // Within last 7 days
+      reportedAt: new Date(Date.now() - seededRandom() * 86400000 * 7).toISOString(), // Within last 7 days
     });
   }
   

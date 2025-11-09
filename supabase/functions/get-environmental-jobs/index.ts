@@ -61,34 +61,242 @@ const locations = [
   { name: "Hyderabad Lakes", lat: 17.3850, lng: 78.4867, city: "Hyderabad, Telangana" },
 ];
 
-// Marine Debris Tracker categories and common items
+// Marine Debris Tracker categories with diverse titles and descriptions
 const debrisJobs = [
   {
     category: "trash",
     items: [
-      { type: "Plastic bottles", urgency: "high", baseReward: 15 },
-      { type: "Food wrappers", urgency: "medium", baseReward: 10 },
-      { type: "Cigarette butts", urgency: "high", baseReward: 12 },
-      { type: "Plastic bags", urgency: "high", baseReward: 15 },
-      { type: "Straws and stirrers", urgency: "medium", baseReward: 8 },
+      { 
+        type: "Plastic bottles", 
+        urgency: "high", 
+        baseReward: 15,
+        titles: [
+          "Remove scattered plastic bottles",
+          "Collect discarded water bottles",
+          "Clean up beverage container waste",
+          "Clear plastic bottle debris"
+        ],
+        descriptions: [
+          "Multiple plastic bottles spotted along the shoreline",
+          "Beverage containers littering the area, urgent cleanup needed",
+          "Accumulation of plastic bottles affecting wildlife",
+          "Tourist area impacted by plastic bottle waste"
+        ]
+      },
+      { 
+        type: "Food wrappers", 
+        urgency: "medium", 
+        baseReward: 10,
+        titles: [
+          "Pick up food packaging waste",
+          "Remove fast food wrappers",
+          "Collect snack packaging debris",
+          "Clear takeaway container litter"
+        ],
+        descriptions: [
+          "Food wrappers from local vendors scattered across beach",
+          "Chip bags and candy wrappers need immediate removal",
+          "Post-festival cleanup: food packaging everywhere",
+          "Tourist zone with excessive takeaway packaging"
+        ]
+      },
+      { 
+        type: "Cigarette butts", 
+        urgency: "high", 
+        baseReward: 12,
+        titles: [
+          "Collect cigarette butt waste",
+          "Remove tobacco product litter",
+          "Clean up smoking debris",
+          "Clear cigarette filter pollution"
+        ],
+        descriptions: [
+          "Heavy concentration of cigarette butts near seating area",
+          "Smoking waste threatening marine ecosystem",
+          "Beach access point covered in cigarette debris",
+          "Popular hangout spot needs butt removal"
+        ]
+      },
+      { 
+        type: "Plastic bags", 
+        urgency: "high", 
+        baseReward: 15,
+        titles: [
+          "Remove wind-blown plastic bags",
+          "Collect shopping bag waste",
+          "Clear carry bag pollution",
+          "Gather scattered plastic bags"
+        ],
+        descriptions: [
+          "Plastic bags caught in vegetation near water",
+          "Shopping bags drifting in from market area",
+          "Multiple bags creating hazard for sea turtles",
+          "Wind has scattered bags across 50-meter stretch"
+        ]
+      },
+      { 
+        type: "Straws and stirrers", 
+        urgency: "medium", 
+        baseReward: 8,
+        titles: [
+          "Collect plastic straws",
+          "Remove drinking straw waste",
+          "Pick up stirrer and straw litter",
+          "Clean up beverage accessory waste"
+        ],
+        descriptions: [
+          "Straws from beachside cafes washing ashore",
+          "Small but significant straw accumulation",
+          "Colorful plastic straws mixed with sand",
+          "Drink accessory waste near restaurant zone"
+        ]
+      },
     ]
   },
   {
     category: "pollution",
     items: [
-      { type: "Oil spill residue", urgency: "critical", baseReward: 25 },
-      { type: "Chemical containers", urgency: "critical", baseReward: 30 },
-      { type: "Medical waste", urgency: "critical", baseReward: 35 },
-      { type: "Industrial debris", urgency: "high", baseReward: 20 },
+      { 
+        type: "Oil spill residue", 
+        urgency: "critical", 
+        baseReward: 25,
+        titles: [
+          "URGENT: Oil residue cleanup needed",
+          "Emergency oil contamination removal",
+          "Critical petroleum waste cleanup",
+          "Immediate oil spill response required"
+        ],
+        descriptions: [
+          "Small oil slick detected, protective equipment required",
+          "Petroleum sheen visible on water surface - act fast",
+          "Oil residue washing up on shore, wildlife at risk",
+          "Suspected boat fuel leak needs immediate attention"
+        ]
+      },
+      { 
+        type: "Chemical containers", 
+        urgency: "critical", 
+        baseReward: 30,
+        titles: [
+          "HAZMAT: Chemical waste removal",
+          "Unsafe chemical container disposal",
+          "Hazardous material cleanup task",
+          "Industrial chemical waste found"
+        ],
+        descriptions: [
+          "Unmarked containers with chemical residue discovered",
+          "Potential industrial waste - safety gear mandatory",
+          "Corroded chemical drums need safe removal",
+          "Hazardous material requires certified handler"
+        ]
+      },
+      { 
+        type: "Medical waste", 
+        urgency: "critical", 
+        baseReward: 35,
+        titles: [
+          "URGENT: Medical waste disposal",
+          "Biohazard cleanup required",
+          "Healthcare waste removal needed",
+          "Emergency medical debris cleanup"
+        ],
+        descriptions: [
+          "Used syringes and medical items - extreme caution",
+          "Hospital waste washed ashore, public health risk",
+          "Biohazard materials require immediate removal",
+          "Medical debris near public access point - urgent"
+        ]
+      },
+      { 
+        type: "Industrial debris", 
+        urgency: "high", 
+        baseReward: 20,
+        titles: [
+          "Remove factory waste materials",
+          "Clear industrial equipment debris",
+          "Collect manufacturing waste",
+          "Industrial pollution cleanup"
+        ],
+        descriptions: [
+          "Metal scraps and industrial waste from nearby plant",
+          "Construction debris washed up during monsoon",
+          "Factory byproducts affecting water quality",
+          "Large industrial items require team effort"
+        ]
+      },
     ]
   },
   {
     category: "reporting",
     items: [
-      { type: "Abandoned fishing gear", urgency: "high", baseReward: 18 },
-      { type: "Large debris accumulation", urgency: "medium", baseReward: 12 },
-      { type: "Wildlife hazard", urgency: "critical", baseReward: 20 },
-      { type: "Illegal dumping site", urgency: "high", baseReward: 22 },
+      { 
+        type: "Abandoned fishing gear", 
+        urgency: "high", 
+        baseReward: 18,
+        titles: [
+          "Retrieve ghost fishing nets",
+          "Remove abandoned fishing equipment",
+          "Collect discarded fishing gear",
+          "Clear tangled nets and lines"
+        ],
+        descriptions: [
+          "Fishing nets trapped in rocks, danger to marine life",
+          "Old fishing gear creating underwater hazard",
+          "Monofilament lines wrapped around coral",
+          "Commercial fishing waste entangling wildlife"
+        ]
+      },
+      { 
+        type: "Large debris accumulation", 
+        urgency: "medium", 
+        baseReward: 12,
+        titles: [
+          "Document major debris pile",
+          "Survey large waste accumulation",
+          "Report extensive litter zone",
+          "Map debris hotspot area"
+        ],
+        descriptions: [
+          "Mixed debris pile estimated 2-3 cubic meters",
+          "Current has pushed trash into concentrated area",
+          "Seasonal accumulation needs assessment",
+          "Storm debris collection point requires survey"
+        ]
+      },
+      { 
+        type: "Wildlife hazard", 
+        urgency: "critical", 
+        baseReward: 20,
+        titles: [
+          "URGENT: Wildlife entanglement risk",
+          "Animal safety hazard reported",
+          "Marine creature in distress",
+          "Immediate wildlife threat"
+        ],
+        descriptions: [
+          "Sea turtle spotted near plastic debris field",
+          "Seabirds attempting to feed on toxic waste",
+          "Dolphin sighting in contaminated waters",
+          "Crab traps endangering protected species"
+        ]
+      },
+      { 
+        type: "Illegal dumping site", 
+        urgency: "high", 
+        baseReward: 22,
+        titles: [
+          "Document unauthorized waste dump",
+          "Report illegal disposal site",
+          "Survey unlawful dumping area",
+          "Investigate illegal waste activity"
+        ],
+        descriptions: [
+          "Organized dumping detected, evidence collection needed",
+          "Recurring illegal disposal site requires documentation",
+          "Fresh dump of household waste discovered",
+          "Vehicle tire marks and bulk waste suggest organized dumping"
+        ]
+      },
     ]
   }
 ];
@@ -114,19 +322,23 @@ function generateJobs() {
     // Calculate distance (simulated - in real app would use user's location)
     const distance = (Math.random() * 15 + 0.5).toFixed(1);
     
+    // Select random title and description for variety
+    const title = item.titles[Math.floor(Math.random() * item.titles.length)];
+    const description = item.descriptions[Math.floor(Math.random() * item.descriptions.length)];
+    
     jobs.push({
       id: `job-${Date.now()}-${i}`,
-      title: `Clean up ${item.type}`,
+      title: title,
       location: location.city,
-      reward: item.baseReward + Math.floor(Math.random() * 5),
-      duration: Math.floor(Math.random() * 30) + 15, // 15-45 minutes
+      reward: item.baseReward + Math.floor(Math.random() * 8) - 2, // More variety in rewards
+      duration: Math.floor(Math.random() * 40) + 10, // 10-50 minutes
       category: categoryData.category,
       urgency: item.urgency,
       distance: `${distance} mi`,
       lat: location.lat + latVariation,
       lng: location.lng + lngVariation,
-      description: `Help clean up ${item.type.toLowerCase()} debris at ${location.name}. This is part of the Marine Debris Tracker initiative to monitor and remove pollution from our coastlines.`,
-      reportedAt: new Date(Date.now() - Math.random() * 86400000 * 3).toISOString(), // Within last 3 days
+      description: `${description}. Located at ${location.name}. Part of Marine Debris Tracker initiative.`,
+      reportedAt: new Date(Date.now() - Math.random() * 86400000 * 7).toISOString(), // Within last 7 days
     });
   }
   

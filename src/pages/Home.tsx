@@ -278,7 +278,9 @@ const Home = () => {
           </Card>
           <Card className="shadow-sm border-accent/20">
             <CardContent className="pt-4 pb-3 text-center">
-              <div className="text-2xl font-bold text-accent">$70</div>
+              <div className="text-2xl font-bold text-accent">
+                ${jobs.reduce((sum, job) => sum + job.reward, 0).toLocaleString()}
+              </div>
               <div className="text-xs text-muted-foreground">Potential</div>
             </CardContent>
           </Card>

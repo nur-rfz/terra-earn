@@ -8,16 +8,52 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { JobClaimFlow } from "@/components/JobClaimFlow";
 
+interface Job {
+  id: string;
+  title: string;
+  location: string;
+  reward: number;
+  duration: number | string;
+  category: string;
+  urgency: string;
+  distance: string;
+  description: string;
+  lat: number;
+  lng: number;
+  reportedAt: string;
+}
+
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [completionId, setCompletionId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [job, setJob] = useState<Job | null>(null);
 
   useEffect(() => {
+    fetchJobDetails();
     checkAuthAndJobStatus();
   }, [id]);
+
+  const fetchJobDetails = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-environmental-jobs');
+      
+      if (error) throw error;
+      
+      const foundJob = data?.jobs?.find((j: Job) => j.id === id);
+      if (foundJob) {
+        setJob(foundJob);
+      } else {
+        toast.error("Job not found");
+        navigate("/home");
+      }
+    } catch (error) {
+      console.error('Error fetching job details:', error);
+      toast.error("Failed to load job details");
+    }
+  };
 
   const checkAuthAndJobStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -51,30 +87,27 @@ const JobDetails = () => {
     checkAuthAndJobStatus();
   };
 
-  // Mock job data
-  const job = {
-    id,
-    title: "Trash Pickup - Central Park",
-    location: "Central Park, Zone A",
-    reward: 15,
-    duration: "30 min",
-    category: "trash",
-    urgency: "high",
-    distance: "0.3 mi",
-    description: "Help keep our park clean by collecting litter in designated Zone A. Trash bags and gloves will be provided at the park entrance. Focus on areas around benches and pathways.",
-    requirements: [
-      "Smartphone for photo verification",
-      "Comfortable walking shoes",
-      "Weather-appropriate clothing"
-    ],
-    steps: [
-      "Accept the job and head to location",
-      "Check in using the app when you arrive",
-      "Complete the cleanup task",
-      "Take before/after photos",
-      "Submit for verification"
-    ]
-  };
+  const requirements = [
+    "Smartphone for photo verification",
+    "Comfortable walking shoes",
+    "Weather-appropriate clothing"
+  ];
+
+  const steps = [
+    "Accept the job and head to location",
+    "Check in using the app when you arrive",
+    "Complete the cleanup task",
+    "Take before/after photos",
+    "Submit for verification"
+  ];
+
+  if (!job) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading job details...</p>
+      </div>
+    );
+  }
 
   const getStatusBadge = () => {
     if (!status) return { text: "Available", color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30" };
@@ -138,7 +171,7 @@ const JobDetails = () => {
               <div>
                 <div className="text-2xl font-bold text-foreground flex items-center justify-center gap-1">
                   <Clock className="w-5 h-5" />
-                  {job.duration}
+                  {typeof job.duration === 'number' ? `${job.duration} min` : job.duration}
                 </div>
                 <div className="text-xs text-muted-foreground">Duration</div>
               </div>
@@ -173,7 +206,7 @@ const JobDetails = () => {
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {job.requirements.map((req, index) => (
+              {requirements.map((req, index) => (
                 <li key={index} className="flex items-center gap-2 text-muted-foreground">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
                   {req}
@@ -193,7 +226,7 @@ const JobDetails = () => {
           </CardHeader>
           <CardContent>
             <ol className="space-y-3">
-              {job.steps.map((step, index) => (
+              {steps.map((step, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
                     {index + 1}

@@ -252,7 +252,7 @@ const Home = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <span className="text-primary">🌍</span> EcoAction
+              <span className="text-primary">🌍</span> TerraEarn
             </h1>
             <p className="text-sm text-muted-foreground">Local jobs, global impact</p>
           </div>
